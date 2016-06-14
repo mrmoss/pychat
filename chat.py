@@ -4,7 +4,7 @@ import BaseHTTPServer
 import urllib
 import urlparse
 
-history=''
+history={}
 
 class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 	def do_GET(self):
@@ -24,6 +24,7 @@ class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
 		try:
 			query_str=urlparse.urlparse(self.path).query
+			room=None
 
 			for query in query_str.split('&'):
 				try:
@@ -33,17 +34,22 @@ class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 						key=query[0]
 						val=urllib.unquote(query[1])
 
-						if key=='tx':
-							data_len=int(self.headers.getheader('content-length',0))
-							if data_len>100:
-								data_len=100
-							data=self.rfile.read(data_len)
-							data.replace('\n','')
-							data.replace('\r','')
-							history+=data+'\n'
-							history='\n'.join(history.split('\n')[-100:])
-							self.send_response(200)
-							self.send_header('Content-type','text/html')
+						if key=='room':
+							room=val
+							if not val in history:
+								history[val]=''
+						elif key=='tx':
+							if room:
+								data_len=int(self.headers.getheader('content-length',0))
+								if data_len>100:
+									data_len=100
+								data=self.rfile.read(data_len)
+								data.replace('\n','')
+								data.replace('\r','')
+								history[room]+=data+'\n'
+								history[room]='\n'.join(history[room].split('\n')[-100:])
+								self.send_response(200)
+								self.send_header('Content-type','text/html')
 							self.end_headers()
 							self.wfile.write(' ')
 							self.wfile.close()
@@ -51,7 +57,8 @@ class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 							self.send_response(200)
 							self.send_header('Content-type','text/html')
 							self.end_headers()
-							self.wfile.write(history)
+							if room:
+								self.wfile.write(history[room])
 							self.wfile.close()
 				except:
 					pass
