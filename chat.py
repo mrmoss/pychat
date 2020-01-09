@@ -17,7 +17,7 @@ class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 			self.end_headers()
 			self.wfile.write(file.read())
 			self.wfile.close()
-		except:
+		except Exception:
 			pass
 	def do_POST(self):
 		global history
@@ -60,14 +60,14 @@ class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 							if room:
 								self.wfile.write(history[room])
 							self.wfile.close()
-				except:
+				except Exception:
 					pass
-		except:
+		except Exception:
 			pass
 
 try:
 	Handler=MyHandler
 	server=BaseHTTPServer.HTTPServer(('127.0.0.1',8080),MyHandler)
 	server.serve_forever()
-except:
+except Exception:
 	pass
